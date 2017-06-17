@@ -1,37 +1,5 @@
 import re
-"""
-
-def filtering(message): 
-	message=message.lower()
-	mes_split=re.findall("(\d|\w)+",message)	
-
-
-
-	
-
-
-
-
-	modals=[r"c+a+n+",r"m+a+y+",r"m+u*s+t+",r"s+h+a*l+",r"w+i+l+",r"c+o*u*l+d+",r"m+i+g+h+t+",r"o+u*g+h+t+",r"s+h+o+u*l+d+",r"w+o+u*l+d+"]
-	stat_of__beng=[r""]	
-	
-
-
-
-	
-
-	
-
-
-	"""
-
-
-
-
-	
-			
-
-
+#from meaning import meaning_message
 	
 class filter_message:
 	
@@ -57,8 +25,8 @@ class filter_message:
 	conj_cor=[r"a+n+d+",r"o+r+"]
 	nei_ei=[r"n+e*i*t+h*e*r+",r"e+i*t+h+e*r+",r"n+o*r+",r"o+r+"]
 	conj_sub=[r"b+e*a*c+a*u+s+e+",r"s+o+",r"t+h+e+n+",r"w+h+i+l+e+",r"b+u+t+"]
-	and_or=set()
-	sen_break=set()	
+	and_or=dict()
+	sen_break=dict()	
 
 	#behavior
 	greeting=[r"h+i+",r"h+e*l+o+",r"y+o+",r"y+u+p+"]
@@ -67,10 +35,17 @@ class filter_message:
 	abusive=[r"f+u*c+k+\s*o*f*",r"b+i+t+c+h+",r""]
 
 
+	#mod
+	modals=[r"c+a+n+",r"m+a+y+",r"m+u*s+t+",r"s+h+a*l+",r"w+i+l+",r"c+#l+d+"r"m+i+g+h+t+",r"o+u*g+h+t+",r"s+h+o+u*l+d+",r"w+o+u*l+d+"]
+	stat_of__beng=[r"i+s+",r"a?r+e?",r"were?",r"w+a+s+",r"am"]
+
+	#question
+	ques=[r"what",r"why",r"how","where",]	
+
 	def __init__(self,message):
 		self.message=message.lower()
 		self.mes_split=re.findall("[(\d|\w)]+",self.message)
-		self.info={"sen_type":0 ,"intr_type":0,"intr_set":set(),"behavior":"","beh_set":set()}
+		self.info={"sen_type":0 ,"intr_type":0,"intr_dict":dict(),"behavior":"","beh_dict":dict(),"ques_dict":dict(),"sob_dict":dict()}
 		
 		self.filtering()
 		
@@ -79,12 +54,15 @@ class filter_message:
 	def filtering(self):
 		self.sentence_type()
 		self.filter_method(filter_message.a_the)
-		self.info["intr_type"]=self.advance_filter_method({"start":0,0:1,1:-1,2:.6},self.info["intr_set"],filter_message.intrjectve_hap,filter_message.intrjectve_sd,filter_message.intrjectve_amze)
+		self.info["intr_type"]=self.advance_filter_method({"start":0,0:1,1:-1,2:.6},self.info["intr_dict"],filter_message.intrjectve_hap,filter_message.intrjectve_sd,filter_message.intrjectve_amze)
 		self.filter_method(filter_message.pro_time,filter_message.prepostion,filter_message.pro_verb,filter_message.pro_verb2)
 		self.filter_method(filter_message.conj_cor,filter_message.conj_sub,filter_message.nei_ei)
 		self.filter_method(filter_message.pron,filter_message.pos_pron)
-		self.info["behavior"]=self.advance_filter_method({"start":"",0:"g",1:"r",2:"b",3:"c"},self.info["beh_set"],self.greeting,self.request,self.abusive)
-
+		self.info["behavior"]=self.advance_filter_method({"start":"",0:"g",1:"r",2:"b",3:"c"},self.info["beh_dict"],filter_message.greeting,filter_message.request,filter_message.abusive)
+		self.mild_filter_method(self.info["ques_dict"],filter_message.ques)
+		self.mild_filter_method(self.info["sob_dict"],filter_message.stat_of__beng)
+		self.filter_method(filter_message.modals)
+		#self.meaning=meaning_message(self.message," ".join(self.mes_split) ,self.info)
 
 	# simplying removes the values 
 	def filter_method(self,*filters_array):
@@ -99,8 +77,8 @@ class filter_message:
 						break
 
 	# measuring qualities
-	def advance_filter_method(self,value_set,store,*filters_array):
-		value_int=value_set["start"]
+	def advance_filter_method(self,value_dict,store,*filters_array):
+		value_int=value_dict["start"]
 		mes_tmp=self.mes_split[:]
 		for i in mes_tmp:
 			for k in filters_array:
@@ -108,11 +86,23 @@ class filter_message:
 					for key ,value in filter_message.replace_dict.items():
 						j=j.replace(key,value)
 					if re.search(r"\s"+j+r"\s"," "+i+" "):
-							store.add(i)
+							store[mes_tmp.index(i)]=i
 							self.mes_split.remove(i)
-							value_int+=value_set[filters_array.index(k)]
+							value_int+=value_dict[filters_array.index(k)]
 							break
 		return value_int
+	def mild_filter_method(self,store,*filters_array):
+		mes_tmp=self.mes_split[:]
+		for i in mes_tmp:
+			for k in filters_array:
+				for j in k:
+					for key ,value in filter_message.replace_dict.items():
+						j=j.replace(key,value)
+					if re.search(r"\s"+j+r"\s"," "+i+" "):
+							store[mes_tmp.index(i)]=i
+							self.mes_split.remove(i)
+							break
+
 
 	# 2 "interogative" ,3 "excalmation" ,1 "else"
 	def sentence_type(self):
